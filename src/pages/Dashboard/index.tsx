@@ -51,15 +51,30 @@ const Dashboard: React.FC = () => {
   >();
   const [searchValue, setSearchValue] = useState('');
 
-  const navigation = useNavigation();
+  const { navigate } = useNavigation();
 
   async function handleNavigate(id: number): Promise<void> {
-    // Navigate do ProductDetails page
+    navigate('FoodDetails', { id });
   }
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
-      // Load Foods from API
+      api
+        .get('foods', {
+          params: {
+            name_like: searchValue,
+            category_like: selectedCategory,
+          },
+        })
+        .then(response => {
+          const foodSearch = response.data.map((food: Food) => {
+            return {
+              ...food,
+              formattedPrice: formatValue(food.price),
+            };
+          });
+          setFoods(foodSearch);
+        });
     }
 
     loadFoods();
@@ -67,14 +82,16 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     async function loadCategories(): Promise<void> {
-      // Load categories from API
+      api.get('categories').then(response => {
+        setCategories(response.data);
+      });
     }
 
     loadCategories();
   }, []);
 
   function handleSelectCategory(id: number): void {
-    // Select / deselect category
+    setSelectedCategory(oldState => (oldState === id ? undefined : id));
   }
 
   return (
@@ -85,7 +102,7 @@ const Dashboard: React.FC = () => {
           name="log-out"
           size={24}
           color="#FFB84D"
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigate('Home')}
         />
       </Header>
       <FilterContainer>
